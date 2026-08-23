@@ -2,7 +2,6 @@
 set -Eeuo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:-cluedops}"
-K3D_IMAGE="${K3D_IMAGE:-rancher/k3d:latest}"
 K3S_SERVER_ARGS=("--disable=traefik")
 
 log() {
@@ -52,13 +51,9 @@ create_cluster() {
   # The cluster is intentionally created with two agent nodes and port mappings
   # for ingress traffic on 80/443, matching the project requirement.
   k3d cluster create "$CLUSTER_NAME" \
-    --agents 2 \
-    --servers 1 \
-    --wait \
-    -p "80:80@loadbalancer" \
-    -p "443:443@loadbalancer" \
-    --k3s-arg "--disable=traefik@server:0" \
-    --image "$K3D_IMAGE"
+    --servers 1 --agents 2 \
+    --port "80:80@loadbalancer" \
+    --port "443:443@loadbalancer"
 
   log "Cluster '$CLUSTER_NAME' created successfully"
 }
