@@ -1,0 +1,26 @@
+# Prod overrides
+replicaCounts:
+  vote: 2
+  worker: 2
+  db: 1
+  redis: 2
+
+images:
+  vote: dockersamples/examplevotingapp_vote:before
+  worker: dockersamples/examplevotingapp_worker
+  db: postgres:15-alpine
+  redis: redis:alpine
+
+service:
+  vote:
+    type: ClusterIP
+    port: 80
+  db:
+    port: 5432
+  redis:
+    port: 6379
+
+env:
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: secure-password-placeholder
+  POSTGRES_PORT: "5432"
