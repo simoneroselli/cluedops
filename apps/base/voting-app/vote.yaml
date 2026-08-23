@@ -1,43 +1,40 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: result
+  name: vote
   labels:
-    app: result
+    app: vote
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
-      app: result
+      app: vote
   template:
     metadata:
       labels:
-        app: result
+        app: vote
     spec:
       containers:
-        - name: result
-          image: dockersamples/examplevotingapp_result:latest
+        - name: vote
+          image: dockersamples/examplevotingapp_vote:before
           ports:
             - containerPort: 80
               name: http
           env:
-            - name: POSTGRES_HOST
-              value: db
-            - name: POSTGRES_PORT
-              value: "5432"
+            - name: REDIS
+              value: redis
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: result
+  name: vote
   labels:
-    app: result
+    app: vote
 spec:
-  type: NodePort
+  type: ClusterIP
   ports:
     - port: 80
       targetPort: 80
-      nodePort: 30081
       name: http
   selector:
-    app: result
+    app: vote
