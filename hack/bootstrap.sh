@@ -1,39 +1,75 @@
-#!/bin/bash
-set -euo pipefail
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "${SCRIPT_DIR}")"
+CLUSTER_NAME="${CLUSTER_NAME:-cluedops}"
+K3D_IMAGE="${K3D_IMAGE:-rancher/k3d:latest}"
+K3S_SERVER_ARGS=("--disable=traefik")
 
-# Color codes for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
-
-log_info() {
-    echo -e "${GREEN}[INFO]${NC} $*"
+log() {
+  printf '%s\n' "$*"
 }
 
-log_error() {
-    echo -e "${RED}[ERROR]${NC} $*"
+require_cmd() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    log "ERROR: required command not found: $cmd"
+    exit 1
+  fi
 }
 
-log_warning() {
-    echo -e "${YELLOW}[WARN]${NC} $*"
+ensure_docker_running() {
+  if ! docker info >/dev/null 2>&1; then
+    log "ERROR: docker is installed but not reachable. Please ensure Docker is running."
+    exit 1
+  fi
 }
 
-# TODO: Implement bootstrap logic per specification
-# This includes:
-# 1. Prerequisites Validation (docker, kubectl, helm, k3d)
-# 2. Cluster Provisioning (k3d with 2 agents)
-# 3. GitOps Core Setup (ArgoCD installation)
-# 4. Manifest Application (core, monitoring, voting-app)
-# 5. Health Check & Access Instructions
+check_prerequisites() {
+  log "==> Validating required tooling"
+
+  require_cmd docker
+  require_cmd kubectl
+  require_cmd helm
+  require_cmd k3d
+
+  ensure_docker_running
+
+  log "Validated: docker, kubectl, helm, and k3d are available"
+}
+
+cluster_exists() {
+  k3d cluster list 2>/dev/null | awk '{print $1}' | grep -Fxq "$CLUSTER_NAME"
+}
+
+create_cluster() {
+  log "==> Provisioning k3d cluster: $CLUSTER_NAME"
+
+  if cluster_exists; then
+    log "Cluster '$CLUSTER_NAME' already exists; reusing it."
+    return 0
+  fi
+
+  # The cluster is intentionally created with two agent nodes and port mappings
+  # for ingress traffic on 80/443, matching the project requirement.
+  k3d cluster create "$CLUSTER_NAME" \
+    --agents 2 \
+    --servers 1 \
+    --wait \
+    -p "80:80@loadbalancer" \
+    -p "443:443@loadbalancer" \
+    --k3s-arg "--disable=traefik@server:0" \
+    --image "$K3D_IMAGE"
+
+  log "Cluster '$CLUSTER_NAME' created successfully"
+}
 
 main() {
-    log_info "CluedOps Bootstrap Script"
-    log_warning "Bootstrap implementation coming in next PR"
-    exit 0
+  log "CluedOps bootstrap starting"
+  check_prerequisites
+  create_cluster
+
+  log "Prerequisites validation and cluster provisioning are prepared."
+  log "Next steps in later PRs: install ArgoCD, apply GitOps manifests, and validate health."
 }
 
 main "$@"
