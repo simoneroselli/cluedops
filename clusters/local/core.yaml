@@ -1,10 +1,39 @@
-# ArgoCD root application manifest / ApplicationSet
-# This will be populated in a subsequent PR with:
-# - Core ArgoCD application definitions
-# - ApplicationSet for managing dependent applications
-# - Namespace provisioning
-
-apiVersion: v1
-kind: Namespace
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
 metadata:
-  name: argocd
+  name: cluedops-demo-apps
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+    - list:
+        elements:
+          - env: dev
+            namespace: dev
+            appName: voting-app
+          - env: prod
+            namespace: prod
+            appName: voting-app
+  template:
+    metadata:
+      name: '{{ .appName }}-{{ .env }}'
+      labels:
+        app.kubernetes.io/part-of: cluedops
+        app.kubernetes.io/component: gitops
+        environment: '{{ .env }}'
+    spec:
+      project: default
+      source:
+        repoURL: git@github.com:simoneroselli/cluedops.git
+        targetRevision: HEAD
+        path: apps/base/voting-app
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{ .namespace }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - RespectIgnoreDifferences=true
