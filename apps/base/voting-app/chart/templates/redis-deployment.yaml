@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "voting-app.fullname" . }}-redis
+  labels:
+    app: {{ include "voting-app.name" . }}-redis
+spec:
+  replicas: {{ .Values.replicaCounts.redis }}
+  selector:
+    matchLabels:
+      app: {{ include "voting-app.name" . }}-redis
+  template:
+    metadata:
+      labels:
+        app: {{ include "voting-app.name" . }}-redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.images.redis }}
+          ports:
+            - containerPort: 6379
+              name: redis
