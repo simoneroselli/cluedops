@@ -1,0 +1,22 @@
+# OS files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/
+*.code-workspace
+
+# Build artifacts
+*.log
+
+# k3d artifacts
+k3d-*
+kubeconfig*
+
+# Temp files
+tmp/
+temp/
+*.tmp

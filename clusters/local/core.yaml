@@ -1,0 +1,10 @@
+# ArgoCD root application manifest / ApplicationSet
+# This will be populated in a subsequent PR with:
+# - Core ArgoCD application definitions
+# - ApplicationSet for managing dependent applications
+# - Namespace provisioning
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: argocd
