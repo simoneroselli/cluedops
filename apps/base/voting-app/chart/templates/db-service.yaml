@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "voting-app.fullname" . }}-db
+  name: '{{include "voting-app.fullname" .}}-db'
   labels:
-    app: {{ include "voting-app.name" . }}-db
+    app: '{{include "voting-app.name" .}}-db'
 spec:
   ports:
-    - port: {{ .Values.service.db.port }}
+    - port: {{.Values.service.db.port}}
       targetPort: 5432
       name: postgres
   selector:
-    app: {{ include "voting-app.name" . }}-db
+    app: '{{include "voting-app.name" .}}-db'

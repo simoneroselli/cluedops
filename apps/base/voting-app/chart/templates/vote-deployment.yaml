@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "voting-app.fullname" . }}-vote
+  name: '{{include "voting-app.fullname" .}}-vote'
   labels:
-    app: {{ include "voting-app.name" . }}-vote
+    app: '{{include "voting-app.name" .}}-vote'
 spec:
-  replicas: {{ .Values.replicaCounts.vote }}
+  replicas: {{.Values.replicaCounts.vote}}
   selector:
     matchLabels:
-      app: {{ include "voting-app.name" . }}-vote
+      app: '{{include "voting-app.name" .}}-vote'
   template:
     metadata:
       labels:
-        app: {{ include "voting-app.name" . }}-vote
+        app: '{{include "voting-app.name" .}}-vote'
     spec:
       containers:
         - name: vote
-          image: {{ .Values.images.vote }}
+          image: '{{.Values.images.vote}}'
           ports:
             - containerPort: 80
               name: http
           env:
             - name: REDIS
-              value: {{ include "voting-app.fullname" . }}-redis
+              value: '{{include "voting-app.fullname" .}}-redis'

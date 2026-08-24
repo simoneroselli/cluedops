@@ -20,7 +20,10 @@ service:
   redis:
     port: 6379
 
+db:
+  secret:
+    user: postgres
+    password: <...> # template values
+
 env:
-  POSTGRES_USER: postgres
-  POSTGRES_PASSWORD: secure-password-placeholder
   POSTGRES_PORT: "5432"

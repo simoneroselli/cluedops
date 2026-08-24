@@ -22,11 +22,15 @@ service:
 
 resources: {}
 
+db:
+  secret:
+    # leave password empty in values.yaml; set in values-dev.yaml or values-prod.yaml
+    user: postgres
+    password: ""
+
 env:
   dev:
     db:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
       POSTGRES_PORT: "5432"
     worker:
       POSTGRES_PORT: "5432"

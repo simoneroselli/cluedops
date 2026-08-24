@@ -1,27 +1,33 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "voting-app.fullname" . }}-db
+  name: '{{include "voting-app.fullname" .}}-db'
   labels:
-    app: {{ include "voting-app.name" . }}-db
+    app: '{{include "voting-app.name" .}}-db'
 spec:
-  replicas: {{ .Values.replicaCounts.db }}
+  replicas: {{.Values.replicaCounts.db}}
   selector:
     matchLabels:
-      app: {{ include "voting-app.name" . }}-db
+      app: '{{include "voting-app.name" .}}-db'
   template:
     metadata:
       labels:
-        app: {{ include "voting-app.name" . }}-db
+        app: '{{include "voting-app.name" .}}-db'
     spec:
       containers:
         - name: db
-          image: {{ .Values.images.db }}
+          image: '{{.Values.images.db}}'
           ports:
             - containerPort: 5432
               name: postgres
           env:
             - name: POSTGRES_USER
-              value: {{ .Values.env.POSTGRES_USER | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: '{{include "voting-app.fullname" .}}-db-secret'
+                  key: POSTGRES_USER
             - name: POSTGRES_PASSWORD
-              value: {{ .Values.env.POSTGRES_PASSWORD | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: '{{include "voting-app.fullname" .}}-db-secret'
+                  key: POSTGRES_PASSWORD
