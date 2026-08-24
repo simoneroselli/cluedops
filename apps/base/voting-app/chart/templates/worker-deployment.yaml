@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: '{{include "voting-app.fullname" . }}-worker'
+  labels:
+    app: '{{include "voting-app.name" .}}-worker'
+spec:
+  replicas: {{.Values.replicaCounts.worker}}
+  selector:
+    matchLabels:
+      app: '{{include "voting-app.name" .}}-worker'
+  template:
+    metadata:
+      labels:
+        app: '{{include "voting-app.name" .}}-worker'
+    spec:
+      containers:
+        - name: worker
+          image: '{{.Values.images.worker}}'
+          env:
+            - name: REDIS
+              value: '{{include "voting-app.fullname" .}}-redis'
+            - name: POSTGRES_HOST
+              value: '{{include "voting-app.fullname" .}}-db'
+            - name: POSTGRES_PORT
+              value: {{.Values.env.POSTGRES_PORT | quote}}

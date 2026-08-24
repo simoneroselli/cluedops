@@ -1,0 +1,29 @@
+# Dev overrides
+replicaCounts:
+  vote: 1
+  worker: 1
+  db: 1
+  redis: 1
+
+images:
+  vote: dockersamples/examplevotingapp_vote:before
+  worker: dockersamples/examplevotingapp_worker
+  db: postgres:15-alpine
+  redis: redis:alpine
+
+service:
+  vote:
+    type: ClusterIP
+    port: 80
+  db:
+    port: 5432
+  redis:
+    port: 6379
+
+db:
+  secret:
+    user: postgres
+    password: <...> # template values
+
+env:
+  POSTGRES_PORT: "5432"
