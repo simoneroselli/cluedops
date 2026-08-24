@@ -23,7 +23,7 @@ service:
 db:
   secret:
     user: postgres
-    password: <...> # template values
+    password: xxxxx # placeholder
 
 env:
   POSTGRES_PORT: "5432"
