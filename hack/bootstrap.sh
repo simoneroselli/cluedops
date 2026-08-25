@@ -64,7 +64,24 @@ main() {
   create_cluster
 
   log "Prerequisites validation and cluster provisioning are prepared."
-  log "Next steps in later PRs: install ArgoCD, apply GitOps manifests, and validate health."
+
+  # Bootstrap Argo CD and the Application CR
+  setup_argocd
+}
+
+setup_argocd() {
+  log "==> Bootstrapping Argo CD (namespace, core manifests, Application)"
+
+  log "Creating 'argocd' namespace (safe to run if it already exists)"
+  kubectl create namespace argocd || true
+
+  log "Applying Argo CD install manifests into 'argocd' namespace"
+  kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+  log "Applying local Argo CD Application manifest: clusters/local/argocd-app.yaml"
+  kubectl apply -f clusters/local/argocd-app.yaml
+
+  log "Argo CD bootstrap completed"
 }
 
 main "$@"
