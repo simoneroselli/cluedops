@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: cluedops-demo-apps
+  name: cluedops-set
   namespace: argocd
 spec:
   goTemplate: true
@@ -9,11 +9,11 @@ spec:
     - list:
         elements:
           - env: dev
-            namespace: dev
-            appName: voting-app
+            namespace: cluedops-dev
+            appName: cluedops
           - env: prod
-            namespace: prod
-            appName: voting-app
+            namespace: cluedops-prod
+            appName: cluedops
   template:
     metadata:
       name: '{{ .appName }}-{{ .env }}'
