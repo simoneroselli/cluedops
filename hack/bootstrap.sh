@@ -2,7 +2,8 @@
 set -Eeuo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:-cluedops}"
-K3S_SERVER_ARGS=("--disable=traefik")
+ARGOCD_LISTEN=8085
+ARGOCD_LISTEN_SSL=8443
 
 log() {
   printf '%s\n' "$*"
@@ -52,10 +53,73 @@ create_cluster() {
   # for ingress traffic on 80/443, matching the project requirement.
   k3d cluster create "$CLUSTER_NAME" \
     --servers 1 --agents 2 \
-    --port "80:80@loadbalancer" \
-    --port "443:443@loadbalancer"
+    --port "${ARGOCD_LISTEN}:80@loadbalancer" \
+    --port "${ARGOCD_LISTEN_SSL}:443@loadbalancer"
 
   log "Cluster '$CLUSTER_NAME' created successfully"
+}
+
+setup_argocd() {
+  log "==> Bootstrapping Argo CD (namespace, core manifests, Application)"
+
+  log "Creating 'argocd' namespace (safe to run if it already exists)"
+  kubectl create namespace argocd || true
+
+  log "Applying Argo CD install manifests into 'argocd' namespace"
+  kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  log "Applying local Argo CD Application manifest: clusters/local/argocd-app.yaml"
+  kubectl apply -f clusters/local/argocd-app.yaml
+
+  wait_for_argocd_pods_running() {
+    # Wait until all pods in the 'argocd' namespace report status == Running
+    local timeout=${1:-300} # seconds
+    local interval=5
+    local elapsed=0
+
+    log "Waiting up to ${timeout}s for all pods in 'argocd' to be 'Running'"
+    while true; do
+      # Collect pod phases into an array portably (Bash 3.2+)
+      phases=()
+      while IFS= read -r line; do
+        [[ -n "$line" ]] && phases+=("$line")
+      done < <(kubectl get pods -n argocd -o jsonpath='{range .items[*]}{.status.phase}{"\n"}{end}' 2>/dev/null || true)
+
+      if [ "${#phases[@]}" -eq 0 ]; then
+        log "No pods found in 'argocd' yet; sleeping ${interval}s"
+      else
+        all_running=true
+        for p in "${phases[@]}"; do
+          if [ "$p" != "Running" ]; then
+            all_running=false
+            break
+          fi
+        done
+
+        if $all_running; then
+          log "All argocd pods are 'Running'"
+          return 0
+        fi
+
+        log "Not all pods are 'Running' yet: ${phases[*]}; sleeping ${interval}s"
+      fi
+
+      sleep "$interval"
+      elapsed=$((elapsed + interval))
+      if [ "$elapsed" -ge "$timeout" ]; then
+        log "Timed out waiting for argocd pods to be Running after ${timeout}s"
+        return 1
+      fi
+    done
+}
+
+  if wait_for_argocd_pods_running 300; then
+    kubectl apply -f clusters/local/argocd-ingress.yaml
+  else
+    log "Skipping apply: not all argocd pods reached 'Running' within timeout"
+    exit 1
+  fi
+
+  log "Argo CD bootstrap completed"
 }
 
 main() {
@@ -66,22 +130,8 @@ main() {
   log "Prerequisites validation and cluster provisioning are prepared."
 
   # Bootstrap Argo CD and the Application CR
+  echo "Bootstrap Argo CD and Application CR"
   setup_argocd
-}
-
-setup_argocd() {
-  log "==> Bootstrapping Argo CD (namespace, core manifests, Application)"
-
-  log "Creating 'argocd' namespace (safe to run if it already exists)"
-  kubectl create namespace argocd || true
-
-  log "Applying Argo CD install manifests into 'argocd' namespace"
-  kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-
-  log "Applying local Argo CD Application manifest: clusters/local/argocd-app.yaml"
-  kubectl apply -f clusters/local/argocd-app.yaml
-
-  log "Argo CD bootstrap completed"
 }
 
 main "$@"

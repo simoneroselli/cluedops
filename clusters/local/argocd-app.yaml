@@ -3,24 +3,19 @@ kind: Application
 metadata:
   name: argocd-app
   namespace: argocd
-  labels:
-    app.kubernetes.io/part-of: argocd
 spec:
   project: default
   source:
     repoURL: https://argoproj.github.io/argo-helm
     chart: argo-cd
-    targetRevision: "5.0.0"
+    targetRevision: 10.3.2
     helm:
       values: |
         server:
+          extraArgs:
+            - --insecure
           service:
             type: NodePort
-            nodePort: 30085
-            ports:
-              - name: https
-                port: 8085
-                targetPort: 443
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
@@ -29,4 +24,4 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - ServerSideApply=true

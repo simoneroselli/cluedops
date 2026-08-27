@@ -4,13 +4,13 @@ help:
 	@echo "CluedOps - GitOps-driven troubleshooting simulator"
 	@echo ""
 	@echo "Available targets:"
-	@echo "  make bootstrap      - Provision k3d cluster, install ArgoCD, and deploy applications"
+	@echo "  make boot           - Provision k3d cluster, install ArgoCD, and deploy applications"
 	@echo "  make teardown       - Destroy k3d cluster and clean up resources"
 	@echo "  make delete-cluster - Delete the k3d cluster directly"
 	@echo "  make clean          - Remove cluster and reset environment"
 	@echo ""
 
-bootstrap:
+boot:
 	@bash hack/bootstrap.sh
 
 delete-cluster:
