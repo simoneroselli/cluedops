@@ -2,8 +2,8 @@
 set -Eeuo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:-cluedops}"
-ARGOCD_LISTEN=8085
-ARGOCD_LISTEN_SSL=8443
+TRAEFIK_PORT=8085
+TRAEFIK_PORT_SSL=8443
 
 log() {
   printf '%s\n' "$*"
@@ -53,9 +53,9 @@ create_cluster() {
   # for ingress traffic on 80/443, matching the project requirement.
   k3d cluster create "$CLUSTER_NAME" \
     --servers 1 --agents 2 \
-    --port "${ARGOCD_LISTEN}:80@loadbalancer" \
-    --port "${ARGOCD_LISTEN_SSL}:443@loadbalancer"
-
+    --port "${TRAEFIK_PORT}:80@loadbalancer" \
+    --port "${TRAEFIK_PORT_SSL}:443@loadbalancer"
+    #--k3s-arg "--disable=traefik@server:0"
   log "Cluster '$CLUSTER_NAME' created successfully"
 }
 
