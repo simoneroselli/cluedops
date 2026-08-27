@@ -24,7 +24,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: git@github.com:simoneroselli/cluedops.git
+        repoURL: https://github.com/simoneroselli/cluedops.git
         targetRevision: HEAD
         path: apps/base/voting-app
       destination:
