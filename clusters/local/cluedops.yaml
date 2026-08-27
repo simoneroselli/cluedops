@@ -4,7 +4,7 @@ metadata:
   name: cluedops-set
   namespace: argocd
 spec:
-  # goTemplate: true
+  goTemplate: true
   generators:
     - list:
         elements:
