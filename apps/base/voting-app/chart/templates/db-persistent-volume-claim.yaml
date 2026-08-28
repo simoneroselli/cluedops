@@ -9,3 +9,5 @@ spec:
     requests:
       storage: '{{.Values.db.persistence.size}}'
   storageClassName: '{{.Values.db.persistence.storageClassName}}'
+  hostPath:
+    path: {{ .Values.db.persistence.hostPath }}

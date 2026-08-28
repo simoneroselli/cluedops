@@ -32,7 +32,7 @@ db:
     accessModes:
       - ReadWriteOnce
     size: 2Gi
-    hostPath: ./data
+    hostPath: /var/repo-data
     reclaimPolicy: Delete
     mountPath: /var/lib/postgresql/data
 
