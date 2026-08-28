@@ -31,3 +31,10 @@ spec:
                 secretKeyRef:
                   name: '{{include "voting-app.fullname" .}}-db-secret'
                   key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: db-data
+              mountPath: '{{.Values.db.persistence.mountPath}}'
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: '{{include "voting-app.fullname" .}}-db-data'

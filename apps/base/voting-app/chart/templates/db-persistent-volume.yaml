@@ -1,0 +1,15 @@
+{{- $volumeName := printf "%s-db-%s" (include "voting-app.fullname" .) .Release.Namespace | trunc 63 | trimSuffix "-" -}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: '{{$volumeName}}'
+spec:
+  capacity:
+    storage: '{{.Values.db.persistence.size}}'
+  accessModes:
+    {{- toYaml .Values.db.persistence.accessModes | nindent 4 }}
+  persistentVolumeReclaimPolicy: '{{.Values.db.persistence.reclaimPolicy}}'
+  storageClassName: '{{.Values.db.persistence.storageClassName}}'
+  hostPath:
+    path: '{{.Values.db.persistence.hostPath}}'
+    type: DirectoryOrCreate

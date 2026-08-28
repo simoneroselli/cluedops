@@ -27,6 +27,14 @@ db:
     # leave password empty in values.yaml; set in values-dev.yaml or values-prod.yaml
     user: postgres
     password: ""
+  persistence:
+    storageClassName: local-postgres
+    accessModes:
+      - ReadWriteOnce
+    size: 2Gi
+    hostPath: ./data
+    reclaimPolicy: Delete
+    mountPath: /var/lib/postgresql/data
 
 env:
   dev:
