@@ -26,7 +26,10 @@ spec:
       source:
         repoURL: https://github.com/simoneroselli/cluedops.git
         targetRevision: HEAD
-        path: apps/base/voting-app
+        path: apps/base/voting-app/chart
+        helm:
+          valueFiles:
+            - values.yaml
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{ .namespace }}'
