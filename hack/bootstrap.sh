@@ -113,12 +113,15 @@ setup_argocd() {
 }
 
   if wait_for_argocd_pods_running 300; then
+    log "Setting up ArgoCD Ingress..."
     kubectl apply -f clusters/local/argocd-ingress.yaml
   else
     log "Skipping apply: not all argocd pods reached 'Running' within timeout"
     exit 1
   fi
 
+  log "Setting up \"${CLUSTER_NAME}\" application set..."
+  kubectl apply -f clusters/local/${CLUSTER_NAME}.yaml
   log "Argo CD bootstrap completed"
 }
 
