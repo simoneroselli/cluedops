@@ -15,7 +15,7 @@
 # k3d artifacts
 k3d-*
 kubeconfig*
-./data
+data/
 
 # Temp files
 tmp/
