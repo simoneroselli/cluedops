@@ -5,6 +5,8 @@ ignore: |
   .venv/
   .agent/
   **/templates/db-secret.yaml
+  **/templates/db-persistent-volume.yaml
+  **/templates/db-persistent-volume-claim.yaml
 
 rules:
   line-length:
