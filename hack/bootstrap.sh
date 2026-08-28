@@ -61,14 +61,16 @@ create_cluster() {
 
 setup_argocd() {
   log "==> Bootstrapping Argo CD (namespace, core manifests, Application)"
+  local kubectl_context="k3d-${CLUSTER_NAME}"
+  check_cluster_running
 
   log "Creating 'argocd' namespace (safe to run if it already exists)"
-  kubectl create namespace argocd || true
+  kubectl --context "$kubectl_context" create namespace argocd || true
 
   log "Applying Argo CD install manifests into 'argocd' namespace"
-  kubectl apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+  kubectl --context "$kubectl_context" apply --server-side -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
   log "Applying local Argo CD Application manifest: clusters/local/argocd-app.yaml"
-  kubectl apply -f clusters/local/argocd-app.yaml
+  kubectl --context "$kubectl_context" apply -f clusters/local/argocd-app.yaml
 
   wait_for_argocd_pods_running() {
     # Wait until all pods in the 'argocd' namespace report status == Running
@@ -82,7 +84,7 @@ setup_argocd() {
       phases=()
       while IFS= read -r line; do
         [[ -n "$line" ]] && phases+=("$line")
-      done < <(kubectl get pods -n argocd -o jsonpath='{range .items[*]}{.status.phase}{"\n"}{end}' 2>/dev/null || true)
+      done < <(kubectl --context "$kubectl_context" get pods -n argocd -o jsonpath='{range .items[*]}{.status.phase}{"\n"}{end}' 2>/dev/null || true)
 
       if [ "${#phases[@]}" -eq 0 ]; then
         log "No pods found in 'argocd' yet; sleeping ${interval}s"
@@ -114,27 +116,52 @@ setup_argocd() {
 
   if wait_for_argocd_pods_running 300; then
     log "Setting up ArgoCD Ingress..."
-    kubectl apply -f clusters/local/argocd-ingress.yaml
+    kubectl --context "$kubectl_context" apply -f clusters/local/argocd-ingress.yaml
   else
     log "Skipping apply: not all argocd pods reached 'Running' within timeout"
     exit 1
   fi
 
   log "Setting up \"${CLUSTER_NAME}\" application set..."
-  kubectl apply -f clusters/local/${CLUSTER_NAME}.yaml
+  kubectl --context "$kubectl_context" apply -f "clusters/local/${CLUSTER_NAME}.yaml"
   log "Argo CD bootstrap completed"
+}
+
+check_cluster_running() {
+  local kubectl_context="k3d-${CLUSTER_NAME}"
+
+  if ! cluster_exists; then
+    log "ERROR: k3d cluster '$CLUSTER_NAME' does not exist. Run 'make boot' first."
+    exit 1
+  fi
+
+  log "==> Checking k3d cluster '$CLUSTER_NAME' is running"
+  if ! kubectl --context "$kubectl_context" cluster-info >/dev/null 2>&1; then
+    log "ERROR: k3d cluster '$CLUSTER_NAME' exists but is not running or reachable."
+    log "Start it with: k3d cluster start '$CLUSTER_NAME'"
+    exit 1
+  fi
 }
 
 main() {
   log "CluedOps bootstrap starting"
-  check_prerequisites
-  create_cluster
-
-  log "Prerequisites validation and cluster provisioning are prepared."
-
-  # Bootstrap Argo CD and the Application CR
-  echo "Bootstrap Argo CD and Application CR"
-  setup_argocd
+  case "${1:-}" in
+    "")
+      check_prerequisites
+      create_cluster
+      log "Prerequisites validation and cluster provisioning are prepared."
+      setup_argocd
+      ;;
+    --setup-argocd)
+      check_prerequisites
+      setup_argocd
+      ;;
+    *)
+      log "ERROR: unknown argument: $1"
+      log "Usage: $0 [--setup-argocd]"
+      exit 1
+      ;;
+  esac
 }
 
 main "$@"
