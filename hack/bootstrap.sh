@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 CLUSTER_NAME="${CLUSTER_NAME:-cluedops}"
-POSTGRES_LOCAL_DIR=/User/zmo/Src/cluedops/data
+REPO_ROOT=/Users/zmo/Src/cluedops
 TRAEFIK_PORT=8085
 TRAEFIK_PORT_SSL=8443
 
@@ -55,8 +55,8 @@ create_cluster() {
   k3d cluster create "$CLUSTER_NAME" \
     --servers 1 --agents 2 \
     --port "${TRAEFIK_PORT}:80@loadbalancer" \
-    --port "${TRAEFIK_PORT_SSL}:443@loadbalancer"
-    --volume "${POSTGRES_LOCAL_DIR}/data:/var/repo-data@agent:*"
+    --port "${TRAEFIK_PORT_SSL}:443@loadbalancer" \
+    --volume "${REPO_ROOT}/data:/var/repo-data@agent:*"
   log "Cluster '$CLUSTER_NAME' created successfully"
 }
 
